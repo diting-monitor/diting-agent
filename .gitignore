@@ -1,0 +1,13 @@
+# Binaries
+/diting-agent
+*.exe
+bin/
+
+# Test artifacts
+*.test
+*.out
+
+# System & IDE
+.DS_Store
+.idea/
+.vscode/
