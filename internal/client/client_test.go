@@ -98,6 +98,7 @@ func TestClient_Lifecycle(t *testing.T) {
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
 	client := New(wsURL, testToken)
+	client.interval = 50 * time.Millisecond
 	col := collector.New()
 
 	ctx, cancel := context.WithCancel(t.Context())
@@ -105,7 +106,7 @@ func TestClient_Lifecycle(t *testing.T) {
 
 	clientDone := make(chan struct{})
 	go func() {
-		client.Start(ctx, col, 50*time.Millisecond)
+		client.Start(ctx, col)
 		close(clientDone)
 	}()
 
@@ -179,7 +180,7 @@ func TestClient_HandshakeFailure_Retry(t *testing.T) {
 	client.backoff = newBackoff(10*time.Millisecond, 50*time.Millisecond, 2.0)
 
 	col := collector.New()
-	go client.Start(t.Context(), col, 100*time.Millisecond)
+	go client.Start(t.Context(), col)
 
 	select {
 	case <-successCh:

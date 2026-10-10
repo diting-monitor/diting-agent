@@ -61,8 +61,9 @@ flowchart LR
 | :--- | :--- | :--- | :--- | :--- |
 | `--server` | `-s` | `DITING_SERVER_URL` | `ws://127.0.0.1:8080/api/v1/ws/rpc` | Target server WebSocket RPC endpoint (`ws://` or `wss://`) |
 | `--token` | `-t` | `DITING_TOKEN` | *(Required)* | Node authentication token for server connection |
-| `--interval`| `-i` | `DITING_REPORT_INTERVAL` | `2s` | Telemetry reporting interval (minimum: `500ms`) |
 | `--version` | `-v` | — | — | Print agent version and exit |
+
+> **Note**: Telemetry reporting interval is standardized at **2 seconds** (`protocol.HeartbeatInterval`) across all agents to maintain unified cadence and minimal resource footprint ($\le 8\text{MB}$ RSS).
 
 ---
 
@@ -70,7 +71,7 @@ flowchart LR
 
 ### 1. Build from Source
 
-Requirements: Go 1.24 or later.
+Requirements: Go 1.27 or later.
 
 ```bash
 # Clone repository

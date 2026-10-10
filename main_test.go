@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"testing"
-	"time"
 )
 
 func TestLoadConfig_Defaults(t *testing.T) {
@@ -19,9 +18,6 @@ func TestLoadConfig_Defaults(t *testing.T) {
 	if cfg.Token != "my-test-token" {
 		t.Errorf("expected Token %q, got %q", "my-test-token", cfg.Token)
 	}
-	if cfg.Interval != DefaultInterval {
-		t.Errorf("expected default Interval %v, got %v", DefaultInterval, cfg.Interval)
-	}
 }
 
 func TestLoadConfig_MissingToken(t *testing.T) {
@@ -36,7 +32,6 @@ func TestLoadConfig_Flags(t *testing.T) {
 	args := []string{
 		"-s", "wss://remote-server:9000/api/v1/ws/rpc",
 		"-t", "test-token-xyz",
-		"-i", "5s",
 	}
 
 	cfg, err := loadConfig(args)
@@ -50,15 +45,11 @@ func TestLoadConfig_Flags(t *testing.T) {
 	if cfg.Token != "test-token-xyz" {
 		t.Errorf("Token override failed: %v", cfg.Token)
 	}
-	if cfg.Interval != 5*time.Second {
-		t.Errorf("Interval override failed: %v", cfg.Interval)
-	}
 }
 
 func TestLoadConfig_Env(t *testing.T) {
 	t.Setenv("DITING_SERVER_URL", "ws://env-host:8080/api/v1/ws/rpc")
 	t.Setenv("DITING_TOKEN", "env-token-456")
-	t.Setenv("DITING_REPORT_INTERVAL", "4s")
 
 	cfg, err := loadConfig([]string{})
 	if err != nil {
@@ -70,9 +61,6 @@ func TestLoadConfig_Env(t *testing.T) {
 	}
 	if cfg.Token != "env-token-456" {
 		t.Errorf("env Token override failed: %v", cfg.Token)
-	}
-	if cfg.Interval != 4*time.Second {
-		t.Errorf("env Interval override failed: %v", cfg.Interval)
 	}
 }
 
@@ -99,18 +87,6 @@ func TestLoadConfig_Validation(t *testing.T) {
 	_, err := loadConfig([]string{"-t", "valid-token", "-s", "http://localhost:8080"})
 	if err == nil {
 		t.Error("URLs starting with http:// should fail validation")
-	}
-
-	// Hazardous interval test (< 500ms)
-	_, err = loadConfig([]string{"-t", "valid-token", "-i", "100ms"})
-	if err == nil {
-		t.Error("intervals < 500ms should fail validation")
-	}
-
-	// Malformed duration string test
-	_, err = loadConfig([]string{"-t", "valid-token", "-i", "not-a-duration"})
-	if err == nil {
-		t.Error("malformed duration string should fail validation")
 	}
 }
 

@@ -24,6 +24,7 @@ type Client struct {
 	mu        sync.Mutex
 	conn      *websocket.Conn
 	backoff   *backoff
+	interval  time.Duration
 }
 
 // New creates a new agent communication client.
@@ -32,18 +33,19 @@ func New(serverURL string, token string) *Client {
 		serverURL: serverURL,
 		token:     token,
 		backoff:   newBackoff(1*time.Second, 30*time.Second, 2.0),
+		interval:  protocol.HeartbeatInterval,
 	}
 }
 
 // Start launches the main client loop with automatic exponential backoff reconnection.
-func (c *Client) Start(ctx context.Context, col *collector.Collector, interval time.Duration) {
+func (c *Client) Start(ctx context.Context, col *collector.Collector) {
 	for {
 		if ctx.Err() != nil {
 			slog.Info("agent client stopped")
 			return
 		}
 
-		err := c.connectAndLoop(ctx, col, interval)
+		err := c.connectAndLoop(ctx, col)
 		if err != nil {
 			// If shutdown was requested, exit cleanly without logging a retry warning.
 			if ctx.Err() != nil {
@@ -70,7 +72,7 @@ func (c *Client) Start(ctx context.Context, col *collector.Collector, interval t
 }
 
 // connectAndLoop executes dial, authentication handshake, and the telemetry reporting loop.
-func (c *Client) connectAndLoop(ctx context.Context, col *collector.Collector, interval time.Duration) error {
+func (c *Client) connectAndLoop(ctx context.Context, col *collector.Collector) error {
 	u, err := url.Parse(c.serverURL)
 	if err != nil {
 		return fmt.Errorf("invalid server URL: %w", err)
@@ -127,7 +129,7 @@ func (c *Client) connectAndLoop(ctx context.Context, col *collector.Collector, i
 	)
 
 	// 2. Start periodic metrics telemetry ticker (agent.metrics).
-	ticker := time.NewTicker(interval)
+	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
 
 	// Listen for server disconnects or control frames.
